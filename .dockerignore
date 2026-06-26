@@ -1,0 +1,14 @@
+# Keep build contexts lean and secrets out of images.
+.git
+**/node_modules
+**/target
+**/.env
+**/.env.*
+**/dist
+**/build
+# Frontend app is not part of the backend service images.
+src
+public
+# Local scratch / progress notes (abi/*.json is NOT a .md and still ships).
+Powerz_progress.md
+**/*.md
