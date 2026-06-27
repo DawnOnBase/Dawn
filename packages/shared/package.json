@@ -1,0 +1,16 @@
+{
+  "name": "@dawn/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./web3": "./src/web3/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "viem": "^2.21.0"
+  }
+}
