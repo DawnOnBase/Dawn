@@ -1,0 +1,87 @@
+[package]
+name = "dawn-agent"
+version = "0.1.0"
+edition = "2021"
+description = "Dawn desktop agent — idle detection + sandboxed job runner "
+
+[[bin]]
+name = "dawn-agent"
+path = "src/main.rs"
+
+[lib]
+name = "dawn_agent"
+path = "src/lib.rs"
+
+# Read-only on-chain connectivity probe; needs the optional on-chain client.
+[[example]]
+name = "onchain_probe"
+required-features = ["onchain"]
+
+[features]
+# On by default: the real WASM job sandbox (wasmtime + WASI preview1). This is the
+# product — without it the agent executes nothing. Gated as a feature only so the
+# fast/no-sandbox dev+CI lane can `--no-default-features` and skip the heavy
+# wasmtime compile; the shipped binary always includes it. (a design decision.)
+default = ["wasm"]
+wasm = ["dep:wasmtime", "dep:wasmtime-wasi"]
+# Off by default: the production on-chain client (alloy provider → Settlement
+# contract). Keeps the default build light; CI builds the heavy tree explicitly.
+# (tokio is now a core dep — the WS transport needs it — so this only adds alloy.)
+onchain = ["dep:alloy"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha3 = "0.10"
+k256 = { version = "0.13", features = ["ecdsa"] }
+
+# Encrypted node-key keystore (M1 key custody): the secp256k1 key is encrypted at
+# rest under a passphrase-derived key (scrypt KDF) with an AEAD (ChaCha20-Poly1305)
+# bound to its address — no more plaintext key in an env var. getrandom seeds the
+# salt/nonce and fresh-key generation.
+scrypt = { version = "0.11", default-features = false, features = ["std"] }
+chacha20poly1305 = "0.10"
+getrandom = "0.2"
+
+# Async runtime + WebSocket transport to the backend coordinator (core to the agent).
+# tokio-tungstenite 0.29 has no TLS backend enabled here → ws:// only for now
+# (wss:// will need a rustls/native-tls feature).
+tokio = { version = "1", default-features = false, features = [
+    "rt-multi-thread",
+    "macros",
+    "net",
+    "time",
+] }
+tokio-tungstenite = "0.29"
+futures-util = "0.3"
+# Fetching job input blobs (http(s):// and ipfs:// via gateway). rustls (no OpenSSL).
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+
+# The real job sandbox (feature `wasm`): wasmtime runs the WASM module deterministically
+# with fuel + epoch (timeout) + memory limits and NO host FS/network; wasmtime-wasi gives
+# the guest stdin/stdout (its only I/O). a design decision.
+# Pinned to the 44.x line: it's the newest wasmtime whose MSRV is 1.92 (45 needs 1.93,
+# 46 needs 1.94), matching this crate's pinned `stable` (1.92) toolchain.
+wasmtime = { version = "=44.0.3", optional = true }
+wasmtime-wasi = { version = "=44.0.3", optional = true }
+
+# Optional on-chain client. Pinned to 1.x: alloy 2.x needs rustc >= 1.91; this crate
+# pins `stable` via rust-toolchain.toml, which satisfies it.
+alloy = { version = "1", default-features = false, features = [
+    "provider-http",
+    "reqwest-rustls-tls",
+    "signer-local",
+    "contract",
+    "sol-types",
+    "network",
+], optional = true }
+
+# Per-OS idle/power probes . Windows uses Win32 directly;
+# Linux reads /sys with std (no deps); macOS is a documented follow-up.
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_System_SystemInformation",
+    "Win32_System_Power",
+    "Win32_UI_Input_KeyboardAndMouse",
+] }

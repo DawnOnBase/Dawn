@@ -1,0 +1,7 @@
+# The production agent build enables the `onchain` feature, whose `alloy` dependency
+# requires rustc >= 1.91. We pin `stable` (>= 1.91) for this crate so `cargo build
+# --features onchain` works without remembering `+stable`. The default (non-onchain)
+# build also compiles on stable. NOTE: this is intentionally scoped to apps/agent and
+# does not touch the machine's global default toolchain (1.89, kept for Solana/sbpf).
+[toolchain]
+channel = "stable"
