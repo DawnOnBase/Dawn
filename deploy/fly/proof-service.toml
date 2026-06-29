@@ -1,0 +1,38 @@
+# dawn-proof-service — proof verify/record + on-chain settler .
+# INTERNAL: reached by job-queue at http://dawn-proof-service.internal:8081.
+# No public IP is required (omit `fly ips allocate`); the [http_service] below
+# gives it TLS + health checks if you do choose to expose it.
+# Deploy from the REPO ROOT:
+#   fly deploy -c deploy/fly/proof-service.toml --remote-only
+app = "dawn-proof-service"
+primary_region = "iad"
+
+[build]
+  dockerfile = "services/proof-service/Dockerfile"
+
+[env]
+  PORT = "8081"
+  CHAIN_ID = "8453"   # Base mainnet. Settlement address resolves from @dawn/shared addresses.ts.
+  # Secrets (fly secrets set): DATABASE_URL, RPC_URL.
+  # Single-node: NO SETTLEMENT_PRIVATE_KEY (the agent self-settles) ⇒ verify/record only.
+  # (A settler key is only for the redundant flow, which is gated off.)
+
+[http_service]
+  internal_port = 8081
+  force_https = true
+  # The settler must stay warm so job-queue can POST proofs on demand.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/healthz"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "512mb"

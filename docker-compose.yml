@@ -1,0 +1,90 @@
+# Dawn backend services . Build context is the repo root for every
+# image so the TS services can resolve @dawn/shared (+ its viem install).
+#
+# Config comes from the gitignored .env (DATABASE_URL, chain/RPC, keys). First run:
+#   docker compose run --rm --entrypoint /usr/local/bin/migrate job-queue
+#   docker compose up --build
+#
+# On-chain features are opt-in (off by default → dev-safe):
+#   proof-service settles when SETTLEMENT_PRIVATE_KEY is set
+#   api verifies x402 on-chain when X402_ONCHAIN=1
+#   indexer polls a Base RPC when INDEXER_RPC=1
+name: dawn
+
+services:
+  job-queue:
+    build:
+      context: .
+      dockerfile: services/job-queue/Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      PROOF_SERVICE_URL: http://proof-service:8081
+      AUTH_ALLOW_ALL: ${AUTH_ALLOW_ALL:-}
+      PORT: 8090
+    # Bind to loopback only — public access is via a TLS reverse proxy (TLS) on 443. Docker's
+    # container networking rules bypass the firewall, so publishing on 0.0.0.0 would expose it directly.
+    ports: ["127.0.0.1:8090:8090"]
+    depends_on: [proof-service]
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      X402_ONCHAIN: ${X402_ONCHAIN:-0}
+      CHAIN_ID: ${CHAIN_ID:-84532}
+      RPC_URL: ${RPC_URL:-}
+      USDC_ADDRESS: ${USDC_ADDRESS:-0x036CbD53842c5426634e7929541eC2318f3dCF7e}
+      TREASURY_ADDRESS: ${TREASURY_ADDRESS:-}
+      NETWORK: ${NETWORK:-base-sepolia}
+      RPC_CU_PER_SEC: ${RPC_CU_PER_SEC:-200}
+      RPC_CU_BURST: ${RPC_CU_BURST:-400}
+      RPC_RETRY_COUNT: ${RPC_RETRY_COUNT:-6}
+    ports: ["127.0.0.1:8080:8080"]
+    restart: unless-stopped
+
+  proof-service:
+    build:
+      context: .
+      dockerfile: services/proof-service/Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      CHAIN_ID: ${CHAIN_ID:-84532}
+      RPC_URL: ${RPC_URL:-}
+      SETTLEMENT_ADDRESS: ${SETTLEMENT_ADDRESS:-}
+      SETTLEMENT_PRIVATE_KEY: ${SETTLEMENT_PRIVATE_KEY:-}
+      RPC_CU_PER_SEC: ${RPC_CU_PER_SEC:-200}
+      RPC_CU_BURST: ${RPC_CU_BURST:-400}
+      RPC_RETRY_COUNT: ${RPC_RETRY_COUNT:-6}
+    # Internal service (job-queue reaches it via the compose network). Loopback only.
+    ports: ["127.0.0.1:8081:8081"]
+    restart: unless-stopped
+
+  pricing:
+    build:
+      context: .
+      dockerfile: services/pricing/Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    ports: ["127.0.0.1:8082:8082"]
+    restart: unless-stopped
+
+  indexer:
+    build:
+      context: .
+      dockerfile: services/indexer/Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      INDEXER_RPC: ${INDEXER_RPC:-0}
+      CHAIN_ID: ${CHAIN_ID:-84532}
+      RPC_URL: ${RPC_URL:-}
+      RPC_CU_PER_SEC: ${RPC_CU_PER_SEC:-200}
+      RPC_CU_BURST: ${RPC_CU_BURST:-400}
+      RPC_RETRY_COUNT: ${RPC_RETRY_COUNT:-6}
+      INDEXER_POLL_MS: ${INDEXER_POLL_MS:-10000}
+      # Alchemy free tier caps eth_getLogs at a 10-block range; 9 → 10 blocks inclusive.
+      INDEXER_MAX_BLOCK_RANGE: ${INDEXER_MAX_BLOCK_RANGE:-9}
+    ports: ["127.0.0.1:8083:8083"]
+    restart: unless-stopped

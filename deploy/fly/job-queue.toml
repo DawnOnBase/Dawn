@@ -1,0 +1,43 @@
+# dawn-job-queue — coordinator + agent WebSocket . PUBLIC.
+# Agents connect over TLS: DAWN_BACKEND_WS=wss://dawn-job-queue.fly.dev/agent
+# (Fly terminates TLS and transparently upgrades the WebSocket — no app change).
+# Deploy from the REPO ROOT:
+#   fly deploy -c deploy/fly/job-queue.toml --remote-only
+app = "dawn-job-queue"
+primary_region = "iad"
+
+[build]
+  dockerfile = "services/job-queue/Dockerfile"
+
+# Apply DB migrations before each release. The migrate binary + the migrations
+# dir ship in the image (MIGRATIONS_DIR=/migrations baked in); it only needs
+# DATABASE_URL, which is provided as a secret.
+[deploy]
+  release_command = "/usr/local/bin/migrate"
+
+[env]
+  PORT = "8090"
+  PROOF_SERVICE_URL = "http://dawn-proof-service.internal:8081"
+  # AUTH_ALLOW_ALL is deliberately UNSET → real EIP-191 node authentication.
+  # NEVER set AUTH_ALLOW_ALL=1 in production.
+  # Secrets (fly secrets set): DATABASE_URL.
+
+[http_service]
+  internal_port = 8090
+  force_https = true
+  # Holds live agent WebSocket connections — never auto-stop.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/healthz"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "512mb"

@@ -1,0 +1,37 @@
+# dawn-api — buyer/SDK HTTP API . PUBLIC.
+# Deploy from the REPO ROOT so the Docker build context resolves @dawn/shared:
+#   fly deploy -c deploy/fly/api.toml --remote-only
+app = "dawn-api"
+primary_region = "iad"
+
+[build]
+  dockerfile = "services/api/Dockerfile"
+
+[env]
+  PORT = "8080"
+  # Base MAINNET (single-node launch). Chain config lives here — committed, public,
+  # and auditable — so it is independent of any fly-secret precedence rule.
+  NETWORK = "base"
+  CHAIN_ID = "8453"
+  USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+  X402_ONCHAIN = "1"
+  # Secrets (fly secrets set): DATABASE_URL, RPC_URL, TREASURY_ADDRESS.
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/healthz"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "512mb"

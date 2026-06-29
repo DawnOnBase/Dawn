@@ -1,0 +1,35 @@
+# dawn-indexer — Base log indexer → DB job state . INTERNAL.
+# Polls a Base RPC continuously when INDEXER_RPC=1, so it must always run.
+# Deploy from the REPO ROOT:
+#   fly deploy -c deploy/fly/indexer.toml --remote-only
+app = "dawn-indexer"
+primary_region = "iad"
+
+[build]
+  dockerfile = "services/indexer/Dockerfile"
+
+[env]
+  PORT = "8083"
+  INDEXER_RPC = "1"
+  CHAIN_ID = "8453"   # Base mainnet. Settlement address + deploy block resolve from addresses.ts.
+  # Secrets (fly secrets set): DATABASE_URL, RPC_URL (paid Base RPC).
+
+[http_service]
+  internal_port = 8083
+  force_https = true
+  # Continuous RPC poller — never auto-stop.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/healthz"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "512mb"

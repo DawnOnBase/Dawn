@@ -1,0 +1,31 @@
+# dawn-pricing — quote/pricing service . INTERNAL.
+# Deploy from the REPO ROOT:
+#   fly deploy -c deploy/fly/pricing.toml --remote-only
+app = "dawn-pricing"
+primary_region = "iad"
+
+[build]
+  dockerfile = "services/pricing/Dockerfile"
+
+[env]
+  PORT = "8082"
+  # Secrets (fly secrets set): DATABASE_URL.
+
+[http_service]
+  internal_port = 8082
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/healthz"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "512mb"
