@@ -1,16 +1,60 @@
 {
-  "name": "@dawn/shared",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@dawnonbase/shared",
+  "version": "0.1.0",
+  "description": "Core Dawn protocol types + the viem Settlement client for Base.",
+  "license": "MIT",
   "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./web3": "./src/web3/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./web3": {
+      "types": "./dist/web3.d.ts",
+      "import": "./dist/web3.js",
+      "require": "./dist/web3.cjs"
+    }
   },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
   "scripts": {
-    "test": "bun test"
+    "build": "tsup",
+    "test": "bun test",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "dawn",
+    "base",
+    "usdc",
+    "web3",
+    "eip712",
+    "settlement",
+    "viem"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DawnOnBase/Dawn.git",
+    "directory": "packages/shared"
+  },
+  "homepage": "https://dawnonbase.com",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://npm.pkg.github.com"
   },
   "dependencies": {
     "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
   }
 }
