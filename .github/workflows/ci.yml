@@ -1,0 +1,238 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ── the backend [P]: Go hot path (job-queue) ────────────────────────────────────
+  job-queue-go:
+    name: job-queue (Go)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/job-queue
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: services/job-queue/go.sum
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && echo "run gofmt -w ." && exit 1)
+      - run: go vet ./...
+      - run: go build ./...
+      - run: go test ./... -race
+
+  # ── the backend [P]: TypeScript services ────────────────────────────────────────
+  services-ts:
+    name: ${{ matrix.service }} (TS)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [api, proof-service, pricing, indexer]
+    defaults:
+      run:
+        working-directory: services/${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      # @dawn/shared/web3 imports viem, resolved from packages/shared's modules.
+      - name: install @dawn/shared deps
+        working-directory: packages/shared
+        run: bun install --frozen-lockfile
+      - run: bun install --frozen-lockfile
+      - name: typecheck
+        run: bunx tsc --noEmit
+      - run: bun test
+
+  # ── shared [S]+[P]: shared package (cross-cutting types + web3 client + M9 seam) ─────────────
+  shared-ts:
+    name: shared (TS)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/shared
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun test
+
+  # ── the agent [S] / shared: buyer SDK (TypeScript) ────────────────────────────
+  sdk-ts:
+    name: sdk (TS)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/sdk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      # @dawn/shared is resolved via tsconfig paths to ../shared/src (no viem pulled).
+      - run: bun install --frozen-lockfile
+      - name: typecheck
+        run: bunx tsc --noEmit
+      - run: bun test
+
+  # ── the backend [P] + shared: Rust desktop agent ─────────────────────────────────
+  agent-rust:
+    name: agent (Rust)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: rustfmt
+        run: cargo fmt --check
+      - name: clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - run: cargo build --verbose
+      - run: cargo test --verbose
+
+  # ── Schema check: apply migrations to a real Postgres (validates the SQL) ───
+  migrations:
+    name: migrations (Postgres)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: dawn
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: apply migrations in order
+        env:
+          PGPASSWORD: postgres
+        run: |
+          for f in $(ls services/job-queue/migrations/*.sql | sort); do
+            echo "applying $f"
+            psql -h localhost -U postgres -d dawn -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+  # ── the backend [P]: Postgres integration tests (proof/indexer/pricing/api) ──────
+  integration-postgres:
+    name: integration (Postgres)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: dawn
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Gates the integration tests on; services without a DB skip these.
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/dawn
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: apply migrations in order
+        env:
+          PGPASSWORD: postgres
+        run: |
+          for f in $(ls services/job-queue/migrations/*.sql | sort); do
+            echo "applying $f"
+            psql -h localhost -U postgres -d dawn -v ON_ERROR_STOP=1 -f "$f"
+          done
+      - name: install @dawn/shared deps
+        working-directory: packages/shared
+        run: bun install --frozen-lockfile
+      - name: proof-service integration
+        working-directory: services/proof-service
+        run: bun install --frozen-lockfile && bun test
+      - name: indexer integration
+        working-directory: services/indexer
+        run: bun install --frozen-lockfile && bun test
+      - name: pricing integration
+        working-directory: services/pricing
+        run: bun install --frozen-lockfile && bun test
+      - name: api integration
+        working-directory: services/api
+        run: bun install --frozen-lockfile && bun test
+
+  # ── the agent [S]: smart contracts (Foundry) ─────────────────────────────────
+  contracts-foundry:
+    name: contracts (Foundry)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+      - run: forge build
+      - run: forge test -vvv
+
+  # ── the agent [S]: contract line-coverage gate (src/ >= 95%) ─────────────────
+  # forge has no native --fail-under and its Total is dragged down by deploy
+  # scripts, so coverage-gate.sh enforces the metric that matters: line coverage
+  # of every instrumented file under src/ (Settlement.sol). Runs as its own job
+  # so the fast `forge test` feedback above isn't blocked by instrumentation.
+  contracts-coverage:
+    name: contracts coverage (Foundry)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+      # --ir-minimum: coverage disables the optimizer, which re-triggers stack-too-deep on the
+      # redundant-flow code; this enables viaIR with minimal optimization to resolve it.
+      - name: forge coverage
+        run: forge coverage --ir-minimum --report summary --report lcov
+      - name: enforce coverage gate
+        run: bash coverage-gate.sh lcov.info
+
+  # ── shared [S]+[P]: M9 redundant flow end-to-end on anvil, with the Go orchestrator ─────────
+  # Self-validating cross-language guard: deploys the ACTUAL contract and signs the Assignment
+  # with the ACTUAL Go orchestrator, so any divergence (typehash, EIP-712 encoding, sig layout,
+  # Merkle) turns this red — no stale fixture can hide it. Needs only foundry + go.
+  redundant-e2e:
+    name: redundant e2e (Go orchestrator ↔ contract)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: services/job-queue/go.sum
+      - name: redundant money path (anvil + Go-signed Assignment)
+        run: bash scripts/e2e_redundant.sh
