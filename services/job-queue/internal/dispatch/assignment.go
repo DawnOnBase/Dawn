@@ -5,7 +5,7 @@
 // Flow (backend-orchestrated, M0 D4 preserving — see the decision notes in the runbook):
 //  1. PrepareAndSign: pick M distinct connected operators (reliability-ranked, region-spread,
 //     stake-gated), EIP-712-sign the Assignment, stash it, and return it for the escrowRedundant
-//     caller (the buyer or a relayer — that on-chain write is the [S] settlement seam).
+//     caller (the buyer or a relayer — that on-chain write is the settlement seam).
 //  2. On JobEscrowed (observed via the indexer), Activate records the stashed committee on the job
 //     (Escrowed → Matched) so coordinator.FindCommitteeJob hands it to its members.
 //

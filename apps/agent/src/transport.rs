@@ -1,4 +1,4 @@
-//! WebSocket transport client `[shared]` .
+//! WebSocket transport client.
 //!
 //! Drives the agent↔backend protocol against the job-queue coordinator
 //! (`services/job-queue/internal/wsserver`). The wire shapes are the `protocol`

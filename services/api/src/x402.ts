@@ -1,6 +1,6 @@
-// x402 agent-payment flow . The HTTP 402 handshake is the
-// [P] side; verifying/settling the payment ON-CHAIN is [shared] with the agent
-// (,). That on-chain step sits behind PaymentVerifier so this service
+// x402 agent-payment flow. The HTTP 402 handshake is handled
+// here; verifying/settling the payment ON-CHAIN is shared with the agent
+// That on-chain step sits behind PaymentVerifier so this service
 // builds and tests without a chain, and the real verifier drops in later.
 
 import type { Address, Hex } from "@dawn/shared";

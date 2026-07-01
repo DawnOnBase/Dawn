@@ -31,7 +31,7 @@ type assignResponse struct {
 }
 
 // Handler serves POST /v1/assignments. Mount it alongside the agent WebSocket. The on-chain
-// escrowRedundant call that consumes this response is the [S] settlement seam, not done here.
+// escrowRedundant call that consumes this response is the settlement seam, not done here.
 func (s *Service) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/assignments", func(w http.ResponseWriter, r *http.Request) {

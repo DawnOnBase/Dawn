@@ -40,7 +40,7 @@ The TS EIP-712 scheme is verified equal to `Settlement.sol` byte-for-byte by
 `escrowRedundant(jobId, amount, deadline, M, bond)`; nodes `submitProof` posting `bond`; the M-th
 matching `outputHash` settles. Nodes then `claim` — winners get `reward share + bond`, losing-hash
 nodes are slashed (bond → treasury), no-consensus-by-deadline returns bonds + buyer refund. The
-proof-service [P] should mirror the same EIP-712 verification before trusting a submission.
+proof-service should mirror the same EIP-712 verification before trusting a submission.
 
 **Proof signature — EIP-712 typed data (must match on both sides).** Domain-separated so a node
 attestation can't be replayed on another chain or a different deployment:
@@ -50,8 +50,8 @@ attestation can't be replayed on another chain or a different deployment:
 - **Message:** `Proof(bytes32 jobId,bytes32 inputHash,bytes32 outputHash,bytes32 metadataHash)`, where `metadataHash = keccak256(metadata)`.
 - The node wallet signs the EIP-712 digest; `nodeSignature = abi.encodePacked(r, s, v)` (65 bytes, low-s / EIP-2 only).
 
-The agent Proof Engine [S] produces it; the Settlement contract [S] (`settle`) and the proof-validation
-service [P] verify against this exact scheme. The contract exposes `domainSeparator()` and
+The agent Proof Engine produces it; the Settlement contract (`settle`) and the proof-validation
+service verify against this exact scheme. The contract exposes `domainSeparator()` and
 `proofDigest(ProofBundle)` as `view`s so off-chain code can cross-check the digest.
 
 > ⚠️ **shared change (was a plain `keccak256(abi.encode(...))` in the scaffold).** the backend: the

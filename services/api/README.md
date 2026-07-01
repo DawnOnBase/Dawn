@@ -20,7 +20,7 @@ Settlement contract jobId. Jobs land as `submitted`; the indexer flips them to
 ## Layout
 - `src/app.ts` — Fastify factory + validation (testable via `inject()`).
 - `src/repo/` — `JobsRepo` interface, in-memory impl (tested), Postgres impl (CI).
-- `src/x402.ts` — `PaymentVerifier` seam; on-chain settle is **[shared]** with the agent.
+- `src/x402.ts` — `PaymentVerifier` seam; on-chain settle is **shared** with the agent.
 - `src/sdk.ts` — `DawnClient` SDK.
 - `src/jobid.ts`, `src/server.ts`.
 

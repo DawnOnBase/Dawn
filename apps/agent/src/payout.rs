@@ -55,7 +55,7 @@ pub trait SettlementRpc {
 
 /// The OperatorStaking surface an M9 committee member needs: a one-time stake so the contract can
 /// lock a per-job bond from it at `submitProof` (M9 doc). Capital-isolation vault, separate
-/// from Settlement. [S]/onchain — kept as a trait so the stake-once orchestration is testable.
+/// from Settlement. On-chain — kept as a trait so the stake-once orchestration is testable.
 pub trait StakingRpc {
     /// `operator`'s free (lockable) stake, USDC base units.
     fn free_stake(&self, operator: &str) -> Result<u128, PayoutError>;

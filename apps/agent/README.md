@@ -23,7 +23,7 @@ User controls: max CPU/GPU utilization, thermal limit, battery floor, blackout s
 - `src/runner.rs` — `Sandbox` trait + `execute()` producing the output and the
   keccak256 input/output hashes for the proof bundle. `EchoSandbox` is a
   dev placeholder. Tested against the canonical keccak vector.
-- `src/protocol.rs` `[shared]` — Rust mirror of the agent protocol (serde, matching
+- `src/protocol.rs` — Rust mirror of the agent protocol (serde, matching
   the TS `t`-tags + camelCase fields). Round-trip tested.
 - `src/proof.rs` — **Proof Engine**: builds the EIP-712 `Proof` digest exactly as
   `Settlement.sol` and signs it with the node wallet (`k256`, low-s, v∈{27,28}). Digest
@@ -53,7 +53,7 @@ Talks to the backend over the WebSocket protocol in [`packages/shared/src/protoc
 ### Follow-ups (tracked)
 - Sandbox runtime — Firecracker / gVisor / OCI — **a design decision is OPEN**; `EchoSandbox` until chosen.
 - Platform signal probes (input idle, screen lock, battery, thermal) per OS.
-- WebSocket transport client (/`[shared]`).
+- WebSocket transport client.
 - `alloy` provider behind `SettlementRpc`, plus durable payout state (persist + on-chain reconcile on startup) ().
 
 Status: ** Idle + Runner and Proof Engine + Payout Manager implemented (signing cross-checked vs contract); WS transport, `alloy` RPC, and sandbox runtime are follow-ups.**

@@ -1,5 +1,5 @@
 // OperatorStaking client + log decoding (M9 capital-isolation vault). Mirrors the Settlement
-// client/rpc helpers so the indexer [P] can reconcile stake balances feeding the matcher's
+// client/rpc helpers so the indexer can reconcile stake balances feeding the matcher's
 // StakeOracle, without importing viem directly. Reads need a publicClient.
 
 import { parseEventLogs, type Abi, type Address, type Hex, type PublicClient } from "viem";

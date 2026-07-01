@@ -1,5 +1,5 @@
-// Lightweight viem client for the Settlement contract .
-// Used by the agent Payout Manager [S] (settle/claim) and the backend indexer [P]
+// Lightweight viem client for the Settlement contract.
+// Used by the agent Payout Manager (settle/claim) and the backend indexer
 // (event decoding). Reads need a publicClient; writes additionally need a walletClient.
 
 import {

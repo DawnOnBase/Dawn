@@ -1,6 +1,6 @@
-// Chain + client factories for the Settlement contract .
-// Centralises viem wiring so the off-chain services (proof-service [P], api [P],
-// indexer [P]) depend only on @dawn/shared/web3 and never import viem directly.
+// Chain + client factories for the Settlement contract.
+// Centralises viem wiring so the off-chain services (proof-service, api,
+// indexer) depend only on @dawn/shared/web3 and never import viem directly.
 
 import {
   createPublicClient,

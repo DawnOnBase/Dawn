@@ -1,5 +1,5 @@
--- job-queue schema (architecture , ).
--- The jobs table is the durable queue + state store. The JOINT domain.Job wire
+-- job-queue schema.
+-- The jobs table is the durable queue + state store. The shared domain.Job wire
 -- type is a subset of these columns; input_ref/created_at/etc. are
 -- backend-internal and never leave the backend.
 
