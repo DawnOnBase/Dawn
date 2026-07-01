@@ -1,6 +1,9 @@
 out/
 cache/
 broadcast/
-lib/
+# forge-std is vendored (pinned) so `forge build` works offline and in CI;
+# ignore any other installed libs.
+lib/*
+!lib/forge-std
 .env
 lcov*.info
