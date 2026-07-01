@@ -1,4 +1,4 @@
-// Package postgres is the production Queue implementation 
+// Package postgres is the production Queue implementation
 // backed by Postgres. The claim hot path uses FOR UPDATE SKIP LOCKED so many
 // coordinator workers can pull jobs concurrently without contention.
 //

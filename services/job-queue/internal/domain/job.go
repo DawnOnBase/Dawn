@@ -44,7 +44,7 @@ type NodeProfile struct {
 	CpuCores         int     `json:"cpuCores"`
 	RamGb            int     `json:"ramGb"`
 	Region           string  `json:"region"`           // coarse geo, e.g. "us-east"
-	ReliabilityScore float64 `json:"reliabilityScore"` // 0..1 
+	ReliabilityScore float64 `json:"reliabilityScore"` // 0..1
 }
 
 // JobRequirements mirrors the shared JobRequirements.

@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 jobs:
-  # ── the backend [P]: Go hot path (job-queue) ────────────────────────────────────
+  # ── Go hot path: the job-queue coordinator ──────────────────────────────────────
   job-queue-go:
     name: job-queue (Go)
     runs-on: ubuntu-latest
@@ -34,7 +34,7 @@ jobs:
       - run: go build ./...
       - run: go test ./... -race
 
-  # ── the backend [P]: TypeScript services ────────────────────────────────────────
+  # ── TypeScript services (api, proof-service, pricing, indexer) ───────────────────
   services-ts:
     name: ${{ matrix.service }} (TS)
     runs-on: ubuntu-latest
@@ -48,8 +48,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.13"
       # @dawn/shared/web3 imports viem, resolved from packages/shared's modules.
-      - name: install @dawn/shared deps
+      - name: install shared package deps
         working-directory: packages/shared
         run: bun install --frozen-lockfile
       - run: bun install --frozen-lockfile
@@ -57,7 +59,7 @@ jobs:
         run: bunx tsc --noEmit
       - run: bun test
 
-  # ── shared [S]+[P]: shared package (cross-cutting types + web3 client + M9 seam) ─────────────
+  # ── shared package: cross-cutting protocol types + the viem Settlement client ────
   shared-ts:
     name: shared (TS)
     runs-on: ubuntu-latest
@@ -67,10 +69,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.13"
       - run: bun install --frozen-lockfile
       - run: bun test
 
-  # ── the agent [S] / shared: buyer SDK (TypeScript) ────────────────────────────
+  # ── buyer SDK (TypeScript) ───────────────────────────────────────────────────
   sdk-ts:
     name: sdk (TS)
     runs-on: ubuntu-latest
@@ -80,13 +84,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.13"
       # @dawn/shared is resolved via tsconfig paths to ../shared/src (no viem pulled).
       - run: bun install --frozen-lockfile
       - name: typecheck
         run: bunx tsc --noEmit
       - run: bun test
 
-  # ── the backend [P] + shared: Rust desktop agent ─────────────────────────────────
+  # ── Rust desktop agent ───────────────────────────────────────────────────────────
   agent-rust:
     name: agent (Rust)
     runs-on: ubuntu-latest
@@ -133,7 +139,7 @@ jobs:
             psql -h localhost -U postgres -d dawn -v ON_ERROR_STOP=1 -f "$f"
           done
 
-  # ── the backend [P]: Postgres integration tests (proof/indexer/pricing/api) ──────
+  # ── Postgres integration tests (proof-service, indexer, pricing, api) ────────────
   integration-postgres:
     name: integration (Postgres)
     runs-on: ubuntu-latest
@@ -156,6 +162,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.13"
       - name: apply migrations in order
         env:
           PGPASSWORD: postgres
@@ -164,7 +172,7 @@ jobs:
             echo "applying $f"
             psql -h localhost -U postgres -d dawn -v ON_ERROR_STOP=1 -f "$f"
           done
-      - name: install @dawn/shared deps
+      - name: install shared package deps
         working-directory: packages/shared
         run: bun install --frozen-lockfile
       - name: proof-service integration
@@ -180,7 +188,7 @@ jobs:
         working-directory: services/api
         run: bun install --frozen-lockfile && bun test
 
-  # ── the agent [S]: smart contracts (Foundry) ─────────────────────────────────
+  # ── smart contracts (Foundry) ────────────────────────────────────────────────
   contracts-foundry:
     name: contracts (Foundry)
     runs-on: ubuntu-latest
@@ -195,7 +203,7 @@ jobs:
       - run: forge build
       - run: forge test -vvv
 
-  # ── the agent [S]: contract line-coverage gate (src/ >= 95%) ─────────────────
+  # ── contract line-coverage gate (src/ >= 95%) ────────────────────────────────
   # forge has no native --fail-under and its Total is dragged down by deploy
   # scripts, so coverage-gate.sh enforces the metric that matters: line coverage
   # of every instrumented file under src/ (Settlement.sol). Runs as its own job
@@ -218,7 +226,7 @@ jobs:
       - name: enforce coverage gate
         run: bash coverage-gate.sh lcov.info
 
-  # ── shared [S]+[P]: M9 redundant flow end-to-end on anvil, with the Go orchestrator ─────────
+  # ── redundant flow end-to-end on anvil, with the Go orchestrator ─────────────────
   # Self-validating cross-language guard: deploys the ACTUAL contract and signs the Assignment
   # with the ACTUAL Go orchestrator, so any divergence (typehash, EIP-712 encoding, sig layout,
   # Merkle) turns this red — no stale fixture can hide it. Needs only foundry + go.
