@@ -10,7 +10,7 @@ protocol — and of the people running nodes and submitting jobs — seriously.
 Report privately through either channel:
 
 - **GitHub Security Advisories** — [open a private advisory](https://github.com/DawnOnBase/Dawn/security/advisories/new) on this repository.
-- **Email** — `security@dawnonbase.com`.
+- **Email** — `security@dawnonbase.cc`.
 
 Please include a description, affected component, and (ideally) a proof-of-concept
 or reproduction steps. We aim to acknowledge reports within **48 hours** and to

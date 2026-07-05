@@ -14,7 +14,7 @@ import appCss from "../styles.css?url";
 // crawlers (X, Telegram, Discord, iMessage, Slack…) reject relative image URLs.
 // Resolved from the live request host so it's correct on the vercel.app URL AND
 // the production domain. Falls back to the brand domain when no request exists.
-const FALLBACK_ORIGIN = "https://dawnonbase.com";
+const FALLBACK_ORIGIN = "https://dawnonbase.cc";
 
 async function resolveSiteInfo(): Promise<{ origin: string; href: string }> {
   if (import.meta.env.SSR) {

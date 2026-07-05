@@ -38,7 +38,7 @@ export const Route = createFileRoute("/download")({
 
 type Os = "macOS" | "Windows" | "Linux";
 
-const DOWNLOAD_BASE = "https://api.dawnonbase.com/downloads";
+const DOWNLOAD_BASE = "https://api.dawnonbase.cc/downloads";
 
 type Platform = {
   os: Os;

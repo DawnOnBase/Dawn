@@ -49,7 +49,7 @@ const CHANNELS = [
     href: "https://x.com/dawnonbase",
   },
   { icon: Github, label: "GitHub", value: "DawnOnBase", href: "https://github.com/DawnOnBase" },
-  { icon: Mail, label: "Email", value: "support@dawnonbase.com", href: "mailto:support@dawnonbase.com" },
+  { icon: Mail, label: "Email", value: "support@dawnonbase.cc", href: "mailto:support@dawnonbase.cc" },
 ];
 
 const FAQS = [

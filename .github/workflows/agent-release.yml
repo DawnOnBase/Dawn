@@ -77,7 +77,7 @@ jobs:
 
           Run it:
             DAWN_NODE_KEY=0x<your-base-private-key> \
-            DAWN_BACKEND_WS=wss://ws.dawnonbase.com/agent \
+            DAWN_BACKEND_WS=wss://ws.dawnonbase.cc/agent \
             DAWN_SETTLEMENT=0xc27C681cE93a63C0987226CDaC7b66232018651E \
             DAWN_RPC_URL=<your-base-mainnet-rpc-url> \
             DAWN_CHAIN_ID=8453 \

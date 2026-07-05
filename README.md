@@ -14,7 +14,7 @@ Buyers submit jobs and pay per result. Every payout is proven on-chain and settl
 [![Go](https://img.shields.io/badge/Go-job--queue-00ADD8.svg)](./services/job-queue)
 [![TypeScript](https://img.shields.io/badge/TypeScript-services%20%26%20sdk-3178C6.svg)](./services)
 
-**[Website](https://dawnonbase.com)** · **[Download the agent](https://dawnonbase.com/download)** · **[SDK](https://github.com/DawnOnBase/SDK)** · **[Settlement contract ↗](https://basescan.org/address/0xc27C681cE93a63C0987226CDaC7b66232018651E)** · **[X](https://x.com/dawnonbase)** · **[Telegram](https://t.me/dawnonbase)**
+**[Website](https://dawnonbase.cc)** · **[Download the agent](https://dawnonbase.cc/download)** · **[SDK](https://github.com/DawnOnBase/SDK)** · **[Settlement contract ↗](https://basescan.org/address/0xc27C681cE93a63C0987226CDaC7b66232018651E)** · **[X](https://x.com/dawnonbase)** · **[Telegram](https://t.me/dawnonbase)**
 
 </div>
 
@@ -107,7 +107,7 @@ Submitting jobs from your own backend? Use the SDK — [**DawnOnBase/SDK**](http
 ```ts
 import { DawnClient } from "@dawnonbase/sdk";
 
-const dawn = new DawnClient("https://api.dawnonbase.com");
+const dawn = new DawnClient("https://api.dawnonbase.cc");
 const result = await dawn.submitAndWait({ /* ... */ });
 ```
 

@@ -11,7 +11,7 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 // Deploy target: Vercel (Nitro `vercel` preset -> .vercel/output Build Output API).
 // The Lovable wrapper defaults Nitro to `cloudflare-module`; user `nitro` options
 // are spread on top, so `preset: "vercel"` overrides it cleanly.
-// CORS: allow https://dawnonbase.com on every response via Nitro route rules.
+// CORS: allow https://dawnonbase.cc on every response via Nitro route rules.
 export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
@@ -21,7 +21,7 @@ export default defineConfig({
     routeRules: {
       "/**": {
         headers: {
-          "Access-Control-Allow-Origin": "https://dawnonbase.com",
+          "Access-Control-Allow-Origin": "https://dawnonbase.cc",
           "Access-Control-Allow-Methods": "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type, Authorization",
           "Access-Control-Allow-Credentials": "true",

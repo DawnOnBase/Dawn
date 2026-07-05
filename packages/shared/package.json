@@ -44,7 +44,7 @@
     "url": "git+https://github.com/DawnOnBase/Dawn.git",
     "directory": "packages/shared"
   },
-  "homepage": "https://dawnonbase.com",
+  "homepage": "https://dawnonbase.cc",
   "publishConfig": {
     "access": "public",
     "registry": "https://npm.pkg.github.com"
